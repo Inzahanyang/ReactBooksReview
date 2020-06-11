@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Col, Form, Input, Button, Divider } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Input, Button, Divider, Col, message } from 'antd';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
+import axios from 'axios';
 
 const Title = styled.div`
   padding-top: 10px;
@@ -103,20 +103,41 @@ const LinkButton = styled(Button)`
   }
 `;
 
-export default () => {
+export default withRouter(({ history }) => {
   const [loading, setLoading] = useState(false);
   const emailInput = React.createRef();
   const passwordInput = React.createRef();
 
-  const click = () => {
+  const click = async () => {
     setLoading(true);
-    console.log(
-      emailInput.current.state.value,
-      passwordInput.current.state.value,
-    );
-    setTimeout(() => {
+    const email = emailInput.current.state.value;
+    const password = passwordInput.current.state.value;
+
+    if (!email) {
+      message.error('Enter Email');
+      emailInput.current.focus();
+    } else if (!password) {
+      message.error('Enter password');
+      passwordInput.current.focus();
+    }
+
+    try {
+      const {
+        data: { token },
+      } = await axios.post('https://api.marktube.tv/v1/me', {
+        email,
+        password,
+      });
+      console.log(token);
+      setTimeout(() => {
+        setLoading(false);
+        history.push('/');
+      }, 3000);
+      localStorage.setItem('token', token);
+    } catch (e) {
+      console.log(e);
       setLoading(false);
-    }, 3000);
+    }
   };
 
   return (
@@ -178,4 +199,4 @@ export default () => {
       </form>
     </Col>
   );
-};
+});
